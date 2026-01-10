@@ -4,7 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
 Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
-    double packingCost) async {
+    double packingCost, double previousBalance, String invoiceFor) async {
   final pdf = pw.Document();
   final finalTotal = total + packingCost;
 
@@ -37,6 +37,14 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
             ),
           ),
           pw.SizedBox(height: 12),
+          pw.Align(
+            alignment: pw.Alignment.centerLeft,
+            child: pw.Text(
+              'Invoice For: $invoiceFor',
+              style: const pw.TextStyle(fontSize: 12),
+            ),
+          ),
+          pw.SizedBox(height: 6),
           pw.Align(
             alignment: pw.Alignment.centerLeft,
             child: pw.Text(
@@ -189,6 +197,17 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                     ),
                   ),
                 ),
+                if (previousBalance > 0)
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(top: 12),
+                    child: pw.Text(
+                      'Final Due: Rs. ${(finalTotal + previousBalance).toStringAsFixed(2)}',
+                      style: pw.TextStyle(
+                        fontSize: 15,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

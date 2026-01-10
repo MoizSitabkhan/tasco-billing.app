@@ -22,6 +22,24 @@ class _ItemsScreenState extends State<ItemsScreen> {
     if (nameCtrl.text.isEmpty || priceCtrl.text.isEmpty) return;
 
     final db = await AppDatabase.db;
+
+    // Check for duplicate item (case insensitive)
+    final existingItems = await db.query(
+      'items',
+      where: 'LOWER(name) = ?',
+      whereArgs: [nameCtrl.text.toLowerCase()],
+    );
+
+    if (existingItems.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Item "${nameCtrl.text}" already exists!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     await db.insert('items', {
       'name': nameCtrl.text,
       'price': double.parse(priceCtrl.text),
