@@ -17,12 +17,23 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
         children: [
           // Header
           pw.Center(
-            child: pw.Text(
-              'T.A. Sitabkhan',
-              style: pw.TextStyle(
-                fontSize: 18,
-                fontWeight: pw.FontWeight.bold,
-              ),
+            child: pw.Column(
+              children: [
+                pw.Text(
+                  'TASCO',
+                  style: pw.TextStyle(
+                    fontSize: 19,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.Text(
+                  'Estimate Bill',
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                    fontStyle: pw.FontStyle.italic,
+                  ),
+                ),
+              ],
             ),
           ),
           pw.SizedBox(height: 12),
@@ -30,7 +41,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
             alignment: pw.Alignment.centerLeft,
             child: pw.Text(
               'Invoice Date: ${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}',
-              style: const pw.TextStyle(fontSize: 11),
+              style: const pw.TextStyle(fontSize: 12),
             ),
           ),
           pw.SizedBox(height: 12),
@@ -58,7 +69,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                         'Item',
                         style: pw.TextStyle(
                           fontWeight: pw.FontWeight.bold,
-                          fontSize: 11,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -70,7 +81,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                         'Qty',
                         style: pw.TextStyle(
                           fontWeight: pw.FontWeight.bold,
-                          fontSize: 11,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -82,7 +93,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                         'Price',
                         style: pw.TextStyle(
                           fontWeight: pw.FontWeight.bold,
-                          fontSize: 11,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -94,7 +105,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                         'Total',
                         style: pw.TextStyle(
                           fontWeight: pw.FontWeight.bold,
-                          fontSize: 11,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -109,7 +120,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                       padding: const pw.EdgeInsets.all(8),
                       child: pw.Text(
                         item['name'].toString(),
-                        style: const pw.TextStyle(fontSize: 10),
+                        style: const pw.TextStyle(fontSize: 11),
                       ),
                     ),
                     pw.Padding(
@@ -117,7 +128,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                       child: pw.Center(
                         child: pw.Text(
                           item['qty'].toString(),
-                          style: const pw.TextStyle(fontSize: 10),
+                          style: const pw.TextStyle(fontSize: 11),
                         ),
                       ),
                     ),
@@ -126,7 +137,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                       child: pw.Center(
                         child: pw.Text(
                           'Rs. ${double.parse(item['price'].toString()).toStringAsFixed(2)}',
-                          style: const pw.TextStyle(fontSize: 10),
+                          style: const pw.TextStyle(fontSize: 11),
                         ),
                       ),
                     ),
@@ -135,7 +146,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                       child: pw.Center(
                         child: pw.Text(
                           'Rs. ${double.parse(item['total'].toString()).toStringAsFixed(2)}',
-                          style: const pw.TextStyle(fontSize: 10),
+                          style: const pw.TextStyle(fontSize: 11),
                         ),
                       ),
                     ),
@@ -155,7 +166,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                 pw.Text(
                   'Subtotal: Rs. ${total.toStringAsFixed(2)}',
                   style: pw.TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                   ),
                 ),
                 if (packingCost > 0)
@@ -164,7 +175,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                     child: pw.Text(
                       'Packing Cost: Rs. ${packingCost.toStringAsFixed(2)}',
                       style: pw.TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                       ),
                     ),
                   ),
@@ -173,7 +184,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                   child: pw.Text(
                     'Grand Total: Rs. ${finalTotal.toStringAsFixed(2)}',
                     style: pw.TextStyle(
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: pw.FontWeight.bold,
                     ),
                   ),
