@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../db/database.dart';
 import '../utils/pdf_generator.dart';
 import '../utils/bill_state.dart';
@@ -34,10 +35,16 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
     loadItems();
     searchController.addListener(_filterItems);
 
-    // Restore bill state if it exists - deep copy the items
+    // Restore bill state if it exists - deep copy the items and ensure correct types
     final billState = BillState();
     if (billState.hasSavedBill()) {
-      billItems = List.from(billState.billItems.map((item) => Map.from(item)));
+      billItems = List.from(billState.billItems.map((item) {
+        final Map<String, dynamic> typedItem = {};
+        item.forEach((key, value) {
+          typedItem[key.toString()] = value;
+        });
+        return typedItem;
+      }));
       total = billState.total;
       packingCost = billState.packingCost;
       previousBalance = billState.previousBalance;
@@ -130,7 +137,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
         return;
       }
 
-      // First, ask for "Invoice For" (client name)
+      // First, ask for "Billed To" (client name)
       String invoiceFor = '';
       await showDialog<String>(
         context: context,
@@ -138,7 +145,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
         builder: (context) {
           final invoiceController = TextEditingController();
           return AlertDialog(
-            title: const Text('Invoice For'),
+            title: const Text('Billed To'),
             content: TextField(
               controller: invoiceController,
               decoration: const InputDecoration(
@@ -188,8 +195,13 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
     if (billItems.isEmpty && billState.hasSavedBill()) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          billItems =
-              List.from(billState.billItems.map((item) => Map.from(item)));
+          billItems = List.from(billState.billItems.map((item) {
+            final Map<String, dynamic> typedItem = {};
+            item.forEach((key, value) {
+              typedItem[key.toString()] = value;
+            });
+            return typedItem;
+          }));
           total = billState.total;
           packingCost = billState.packingCost;
           previousBalance = billState.previousBalance;
@@ -364,6 +376,11 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                             // Limit to 1 decimal place
                             quantity = double.parse(parsed.toStringAsFixed(1));
                           },
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d+\.?\d?'),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 12),
                         // Custom Price Input
@@ -444,38 +461,32 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                                 ),
                         ),
                         const SizedBox(height: 8),
-                        // Total & Actions (centered)
-                        Center(
+                        // Total & Actions (full width)
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: appPrimaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           child: Column(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: appPrimaryColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Column(
-                                  children: [
-                                    const Text(
-                                      'Total Amount:',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      '₹${total.toStringAsFixed(1)}',
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: appPrimaryColor,
-                                      ),
-                                    ),
-                                  ],
+                              const Text(
+                                'Total Amount:',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const SizedBox(height: 8),
+                              Text(
+                                '₹${total.toStringAsFixed(1)}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: appPrimaryColor,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
                               Align(
                                 alignment: Alignment.centerLeft,
                                 child: TextButton(
@@ -500,18 +511,16 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Center(
-                          child: SizedBox(
-                            width: 220,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green[600],
-                              ),
-                              onPressed: generateAndShare,
-                              child: const Text(
-                                'Generate & Share Bill',
-                                style: TextStyle(color: Colors.white),
-                              ),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green[600],
+                            ),
+                            onPressed: generateAndShare,
+                            child: const Text(
+                              'Generate & Share Bill',
+                              style: TextStyle(color: Colors.white),
                             ),
                           ),
                         ),
@@ -556,7 +565,8 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
   }
 
   void _showPackingCostDialog() {
-    final controller = TextEditingController(text: packingCost.toString());
+    final controller = TextEditingController(
+        text: packingCost > 0 ? packingCost.toString() : '');
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -593,7 +603,8 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
   }
 
   void _showPreviousBalanceDialog() {
-    final controller = TextEditingController(text: previousBalance.toString());
+    final controller = TextEditingController(
+        text: previousBalance > 0 ? previousBalance.toString() : '');
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -648,6 +659,11 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(labelText: 'Quantity'),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(
+                  RegExp(r'^\d+\.?\d?'),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             TextField(

@@ -38,7 +38,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
         pw.Align(
           alignment: pw.Alignment.centerLeft,
           child: pw.Text(
-            'Invoice For: $invoiceFor',
+            'Billed To: $invoiceFor',
             style: const pw.TextStyle(fontSize: 12),
           ),
         ),
@@ -197,7 +197,17 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
               ),
               if (previousBalance > 0)
                 pw.Padding(
-                  padding: const pw.EdgeInsets.only(top: 12),
+                  padding: const pw.EdgeInsets.only(top: 8),
+                  child: pw.Text(
+                    'Previous Balance: Rs. ${previousBalance.toStringAsFixed(2)}',
+                    style: pw.TextStyle(
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              if (previousBalance > 0)
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 8),
                   child: pw.Text(
                     'Final Due: Rs. ${(finalTotal + previousBalance).toStringAsFixed(2)}',
                     style: pw.TextStyle(
