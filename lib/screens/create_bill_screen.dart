@@ -18,7 +18,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
   List<Map<String, dynamic>> billItems = [];
 
   int? selectedItemId;
-  int quantity = 1;
+  double quantity = 1.0;
   double customPrice = 0;
   double total = 0;
   double packingCost = 0;
@@ -82,19 +82,23 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
     double price = customPrice > 0 ? customPrice : selected['price'];
     double itemTotal = price * quantity;
 
-    // Check if item already exists in bill
-    int existingIndex = billItems.indexWhere(
-      (item) =>
-          item['name'].toLowerCase() == selected['name'].toLowerCase() &&
-          item['price'] == price,
-    );
+    // Check if item already exists in bill (match by name, case-insensitive)
+    int existingIndex = billItems.indexWhere((item) =>
+        (item['name'] as String).toLowerCase() ==
+        (selected['name'] as String).toLowerCase());
 
     if (existingIndex != -1) {
-      // Item exists, update quantity and total
+      // Item exists, update quantity and total. If custom price provided, update price.
       total -= billItems[existingIndex]['total'];
-      billItems[existingIndex]['qty'] += quantity;
+      billItems[existingIndex]['qty'] =
+          (billItems[existingIndex]['qty'] as double) + quantity;
+      if (customPrice > 0) {
+        billItems[existingIndex]['price'] = price;
+      } else {
+        price = (billItems[existingIndex]['price'] as num).toDouble();
+      }
       billItems[existingIndex]['total'] =
-          billItems[existingIndex]['qty'] * price;
+          (billItems[existingIndex]['qty'] as double) * price;
       total += billItems[existingIndex]['total'];
     } else {
       // New item, add it
@@ -107,7 +111,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
       total += itemTotal;
     }
 
-    quantity = 1;
+    quantity = 1.0;
     customPrice = 0;
     selectedItemId = null;
     quantityController.clear();
@@ -324,16 +328,17 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                             ),
                           ),
                         const SizedBox(height: 12),
-                        // Quantity Input
+                        // Quantity Input (supports decimals)
                         TextField(
                           controller: quantityController,
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           decoration: InputDecoration(
                             labelText: 'Quantity',
                             prefixIcon: const Icon(Icons.shopping_cart),
                           ),
                           onChanged: (val) {
-                            quantity = int.tryParse(val) ?? 1;
+                            quantity = double.tryParse(val) ?? 1.0;
                           },
                         ),
                         const SizedBox(height: 12),
@@ -386,25 +391,29 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                                           style: const TextStyle(
                                               fontWeight: FontWeight.bold),
                                         ),
-                                        subtitle: Text(
-                                          'Qty: ${item['qty']} × ₹${item['price'].toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                              color: appPrimaryColor),
-                                        ),
+                                        subtitle: Builder(builder: (context) {
+                                          final qty =
+                                              (item['qty'] as num).toDouble();
+                                          final qtyStr =
+                                              qty == qty.roundToDouble()
+                                                  ? qty.toStringAsFixed(0)
+                                                  : qty.toStringAsFixed(2);
+                                          return Text(
+                                            'Qty: $qtyStr × ₹${(item['price'] as num).toDouble().toStringAsFixed(2)}',
+                                            style: const TextStyle(
+                                                color: appPrimaryColor),
+                                          );
+                                        }),
                                         trailing: Text(
-                                          '₹${item['total'].toStringAsFixed(2)}',
+                                          '₹${(item['total'] as num).toDouble().toStringAsFixed(2)}',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             color: appPrimaryColor,
                                             fontSize: 14,
                                           ),
                                         ),
-                                        onLongPress: () {
-                                          setState(() {
-                                            total -= item['total'];
-                                            billItems.removeAt(index);
-                                          });
-                                        },
+                                        onTap: () =>
+                                            _showEditBillItemDialog(index),
                                       ),
                                     );
                                   },
@@ -588,6 +597,74 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
             onPressed: () {
               previousBalance = double.tryParse(controller.text) ?? 0;
               setState(() {});
+              Navigator.pop(context);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditBillItemDialog(int index) {
+    final item = billItems[index];
+    final qtyController =
+        TextEditingController(text: (item['qty'] as num).toDouble().toString());
+    final priceController = TextEditingController(
+        text: (item['price'] as num).toDouble().toStringAsFixed(2));
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit ${item['name']}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: qtyController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Quantity'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: priceController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Price'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Delete item
+              setState(() {
+                billItems.removeAt(index);
+                total = billItems.fold(
+                    0.0, (sum, it) => sum + (it['total'] as num).toDouble());
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newQty = double.tryParse(qtyController.text) ??
+                  (item['qty'] as num).toDouble();
+              final newPrice = double.tryParse(priceController.text) ??
+                  (item['price'] as num).toDouble();
+              setState(() {
+                billItems[index]['qty'] = newQty;
+                billItems[index]['price'] = newPrice;
+                billItems[index]['total'] = newQty * newPrice;
+                total = billItems.fold(
+                    0.0, (sum, it) => sum + (it['total'] as num).toDouble());
+              });
               Navigator.pop(context);
             },
             child: const Text('Save'),
