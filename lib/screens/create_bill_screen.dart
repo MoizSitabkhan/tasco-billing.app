@@ -460,76 +460,76 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                                   },
                                 ),
                         ),
-                        const SizedBox(height: 8),
-                        // Total & Actions (full width)
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: appPrimaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'Total Amount:',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    '₹${total.toStringAsFixed(1)}',
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: appPrimaryColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: TextButton(
-                                  style: TextButton.styleFrom(
-                                    padding: EdgeInsets.zero,
-                                    minimumSize: const Size(0, 24),
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                  onPressed: _showAdditionsMenu,
-                                  child: Text(
-                                    'Additions',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: appPrimaryColor,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green[600],
-                            ),
-                            onPressed: generateAndShare,
-                            child: const Text(
-                              'Generate & Share Bill',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
                       ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Total & Actions (fixed at bottom, NOT in scroll)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: appPrimaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Total Amount:',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '₹${total.toStringAsFixed(1)}',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: appPrimaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 24),
+                            tapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          onPressed: _showAdditionsMenu,
+                          child: Text(
+                            'Additions',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: appPrimaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green[600],
+                    ),
+                    onPressed: generateAndShare,
+                    child: const Text(
+                      'Generate & Share Bill',
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
