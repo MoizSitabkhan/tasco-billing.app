@@ -158,7 +158,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                   ),
                 ],
               );
-            }).toList(),
+            }),
           ],
         ),
         pw.SizedBox(height: 16),

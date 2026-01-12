@@ -34,10 +34,10 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
     loadItems();
     searchController.addListener(_filterItems);
 
-    // Restore bill state if it exists
+    // Restore bill state if it exists - deep copy the items
     final billState = BillState();
     if (billState.hasSavedBill()) {
-      billItems = billState.billItems;
+      billItems = List.from(billState.billItems.map((item) => Map.from(item)));
       total = billState.total;
       packingCost = billState.packingCost;
       previousBalance = billState.previousBalance;
@@ -130,7 +130,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
         return;
       }
 
-      // First, ask for "Invoice For" (customer/client name)
+      // First, ask for "Invoice For" (client name)
       String invoiceFor = '';
       await showDialog<String>(
         context: context,
@@ -142,7 +142,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
             content: TextField(
               controller: invoiceController,
               decoration: const InputDecoration(
-                labelText: 'Customer/Client Name',
+                labelText: 'Client Name',
                 prefixIcon: Icon(Icons.person),
               ),
               autofocus: true,
@@ -160,6 +160,8 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
         },
       );
 
+      if (!mounted) return;
+
       if (invoiceFor.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please enter a customer name')),
@@ -171,6 +173,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
           billItems, total, packingCost, previousBalance, invoiceFor);
       await Share.shareXFiles([XFile(file.path)]);
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString()}')),
       );
@@ -179,6 +182,23 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // If there is a saved bill in the singleton and our local bill is empty,
+    // restore it once after frame to ensure the screen shows the saved bill
+    final billState = BillState();
+    if (billItems.isEmpty && billState.hasSavedBill()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          billItems =
+              List.from(billState.billItems.map((item) => Map.from(item)));
+          total = billState.total;
+          packingCost = billState.packingCost;
+          previousBalance = billState.previousBalance;
+        });
+        // Clear singleton after restoring so it's a one-time restore
+        billState.clearBill();
+      });
+    }
+
     return WillPopScope(
       onWillPop: () async {
         if (billItems.isEmpty) {
@@ -224,6 +244,8 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
               children: [
                 Expanded(
                   child: SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom + 20),
                     child: Column(
                       children: [
                         // Item Selection with Search
@@ -338,7 +360,9 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                             prefixIcon: const Icon(Icons.shopping_cart),
                           ),
                           onChanged: (val) {
-                            quantity = double.tryParse(val) ?? 1.0;
+                            final parsed = double.tryParse(val) ?? 1.0;
+                            // Limit to 1 decimal place
+                            quantity = double.parse(parsed.toStringAsFixed(1));
                           },
                         ),
                         const SizedBox(height: 12),
@@ -420,79 +444,78 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                                 ),
                         ),
                         const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
-                ),
-                // Fixed Total Section at Bottom
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: appPrimaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total Amount:',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '₹${total.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: appPrimaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Additions Section
-                GestureDetector(
-                  onTap: () => _showAdditionsMenu(),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: appPrimaryColor, width: 2),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Additions',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: appPrimaryColor,
-                            fontWeight: FontWeight.w600,
+                        // Total & Actions (centered)
+                        Center(
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: appPrimaryColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  children: [
+                                    const Text(
+                                      'Total Amount:',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '₹${total.toStringAsFixed(1)}',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: appPrimaryColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton(
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: const Size(0, 24),
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  onPressed: _showAdditionsMenu,
+                                  child: Text(
+                                    'Additions',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: appPrimaryColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        Icon(Icons.add_circle_outline,
-                            color: appPrimaryColor, size: 20),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: SizedBox(
+                            width: 220,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green[600],
+                              ),
+                              onPressed: generateAndShare,
+                              child: const Text(
+                                'Generate & Share Bill',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Generate & Share Button (Fixed at Bottom)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[600],
-                    ),
-                    onPressed: generateAndShare,
-                    child: const Text(
-                      'Generate & Share Bill',
-                      style: TextStyle(color: Colors.white),
                     ),
                   ),
                 ),

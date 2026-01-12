@@ -31,6 +31,7 @@ class _ItemsScreenState extends State<ItemsScreen> {
     );
 
     if (existingItems.isNotEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Item "${nameCtrl.text}" already exists!'),
@@ -161,8 +162,9 @@ class _ItemsScreenState extends State<ItemsScreen> {
               child: FutureBuilder(
                 future: fetchItems(),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData)
+                  if (!snapshot.hasData) {
                     return const CircularProgressIndicator();
+                  }
 
                   final items = snapshot.data!;
                   return ListView.builder(
