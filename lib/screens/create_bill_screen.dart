@@ -438,7 +438,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                                           final qtyStr =
                                               qty == qty.roundToDouble()
                                                   ? qty.toStringAsFixed(0)
-                                                  : qty.toStringAsFixed(2);
+                                                  : qty.toStringAsFixed(1);
                                           return Text(
                                             'Qty: $qtyStr × ₹${(item['price'] as num).toDouble().toStringAsFixed(2)}',
                                             style: const TextStyle(
@@ -470,21 +470,25 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                           ),
                           child: Column(
                             children: [
-                              const Text(
-                                'Total Amount:',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '₹${total.toStringAsFixed(1)}',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: appPrimaryColor,
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Total Amount:',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    '₹${total.toStringAsFixed(1)}',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: appPrimaryColor,
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 12),
                               Align(
@@ -566,11 +570,11 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
 
   void _showPackingCostDialog() {
     final controller = TextEditingController(
-        text: packingCost > 0 ? packingCost.toString() : '');
+        text: packingCost > 0 ? packingCost.toStringAsFixed(0) : '');
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Enter Packing Cost'),
+        title: const Text('Packing Cost'),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
@@ -578,6 +582,11 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
             labelText: 'Amount',
             prefixIcon: Icon(Icons.local_shipping),
           ),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(
+              RegExp(r'^\d+$'),
+            ),
+          ],
           autofocus: true,
         ),
         actions: [
@@ -604,11 +613,11 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
 
   void _showPreviousBalanceDialog() {
     final controller = TextEditingController(
-        text: previousBalance > 0 ? previousBalance.toString() : '');
+        text: previousBalance > 0 ? previousBalance.toStringAsFixed(0) : '');
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Enter Previous Balance'),
+        title: const Text('Previous Balance'),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
@@ -616,6 +625,11 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
             labelText: 'Amount',
             prefixIcon: Icon(Icons.history),
           ),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(
+              RegExp(r'^\d+$'),
+            ),
+          ],
           autofocus: true,
         ),
         actions: [
