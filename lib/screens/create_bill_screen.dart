@@ -24,6 +24,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
   double total = 0;
   double packingCost = 0;
   double previousBalance = 0;
+  String clientName = '';
   String searchQuery = '';
   TextEditingController searchController = TextEditingController();
   TextEditingController quantityController = TextEditingController();
@@ -48,6 +49,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
       total = billState.total;
       packingCost = billState.packingCost;
       previousBalance = billState.previousBalance;
+      clientName = billState.clientName;
       billState.clearBill();
     }
   }
@@ -138,12 +140,12 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
       }
 
       // First, ask for "Billed To" (client name)
-      String invoiceFor = '';
+      String invoiceFor = clientName;
       await showDialog<String>(
         context: context,
         barrierDismissible: false,
         builder: (context) {
-          final invoiceController = TextEditingController();
+          final invoiceController = TextEditingController(text: clientName);
           return AlertDialog(
             title: const Text('Billed To'),
             content: TextField(
@@ -176,6 +178,11 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
         return;
       }
 
+      // Save the client name to state
+      setState(() {
+        clientName = invoiceFor;
+      });
+
       final file = await generatePdf(
           billItems, total, packingCost, previousBalance, invoiceFor);
       await Share.shareXFiles([XFile(file.path)]);
@@ -205,6 +212,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
           total = billState.total;
           packingCost = billState.packingCost;
           previousBalance = billState.previousBalance;
+          clientName = billState.clientName;
         });
         // Clear singleton after restoring so it's a one-time restore
         billState.clearBill();
@@ -241,7 +249,8 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
         if (shouldSave == true) {
           // Save bill state
           final billState = BillState();
-          billState.saveBill(billItems, total, packingCost, previousBalance);
+          billState.saveBill(billItems, total, packingCost, previousBalance,
+              clientNameParam: clientName);
         }
 
         return true;
@@ -308,7 +317,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                                                   selectedItemId =
                                                       item['id'] as int;
                                                   searchController.clear();
-                                                  filteredItems = stockItems;
+                                                  // Don't manually set filteredItems - let _filterItems() handle it
                                                 });
                                               },
                                             );
@@ -465,56 +474,53 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Total & Actions (fixed at bottom, NOT in scroll)
+                // Total Amount (fixed at bottom, NOT in scroll)
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: appPrimaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Column(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Total Amount:',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            '₹${total.toStringAsFixed(1)}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: appPrimaryColor,
-                            ),
-                          ),
-                        ],
+                      const Text(
+                        'Total Amount:',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton(
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 24),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          onPressed: _showAdditionsMenu,
-                          child: Text(
-                            'Additions',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: appPrimaryColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                      Text(
+                        '₹${total.toStringAsFixed(1)}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: appPrimaryColor,
                         ),
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 3),
+                // Additions (outside Total box, closer spacing)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 24),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: _showAdditionsMenu,
+                    child: Text(
+                      'Additions',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: appPrimaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
