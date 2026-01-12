@@ -247,6 +247,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
         return true;
       },
       child: Scaffold(
+          resizeToAvoidBottomInset: false,
           appBar: AppBar(
             title: const Text('Create Bill'),
           ),
@@ -256,8 +257,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
               children: [
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+                    padding: const EdgeInsets.only(bottom: 20),
                     child: Column(
                       children: [
                         // Item Selection with Search
@@ -475,8 +475,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                   child: Column(
                     children: [
                       Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
                             'Total Amount:',
@@ -502,8 +501,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
                             minimumSize: const Size(0, 24),
-                            tapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
                           onPressed: _showAdditionsMenu,
                           child: Text(
