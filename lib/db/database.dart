@@ -28,8 +28,8 @@ class AppDatabase {
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           // Add unit column with default value 'dz' for existing items
-          await db.execute(
-              'ALTER TABLE items ADD COLUMN unit TEXT DEFAULT "dz"');
+          await db
+              .execute('ALTER TABLE items ADD COLUMN unit TEXT DEFAULT "dz"');
         }
       },
     );
