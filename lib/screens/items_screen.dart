@@ -12,7 +12,6 @@ class ItemsScreen extends StatefulWidget {
 class _ItemsScreenState extends State<ItemsScreen> {
   final TextEditingController nameCtrl = TextEditingController();
   final TextEditingController priceCtrl = TextEditingController();
-  String selectedUnit = 'dz';
 
   Future<List<Map<String, dynamic>>> fetchItems() async {
     final db = await AppDatabase.db;
@@ -45,12 +44,10 @@ class _ItemsScreenState extends State<ItemsScreen> {
     await db.insert('items', {
       'name': nameCtrl.text,
       'price': double.parse(priceCtrl.text),
-      'unit': selectedUnit,
     });
 
     nameCtrl.clear();
     priceCtrl.clear();
-    selectedUnit = 'dz';
     setState(() {});
   }
 
@@ -60,11 +57,11 @@ class _ItemsScreenState extends State<ItemsScreen> {
     setState(() {});
   }
 
-  Future<void> editItem(int id, String name, double price, String unit) async {
+  Future<void> editItem(int id, String name, double price) async {
     final db = await AppDatabase.db;
     await db.update(
       'items',
-      {'name': name, 'price': price, 'unit': unit},
+      {'name': name, 'price': price},
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -74,64 +71,46 @@ class _ItemsScreenState extends State<ItemsScreen> {
   void showEditDialog(Map<String, dynamic> item) {
     final editNameCtrl = TextEditingController(text: item['name']);
     final editPriceCtrl = TextEditingController(text: item['price'].toString());
-    String editUnit = item['unit'] ?? 'dz';
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Edit Item'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: editNameCtrl,
-                decoration: const InputDecoration(labelText: 'Item name'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: editPriceCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Price'),
-              ),
-              const SizedBox(height: 12),
-              DropdownButton<String>(
-                value: editUnit,
-                isExpanded: true,
-                items: ['dz', 'pcs', 'grs', 'ltr', 'kg']
-                    .map((unit) =>
-                        DropdownMenuItem(value: unit, child: Text(unit)))
-                    .toList(),
-                onChanged: (value) {
-                  setDialogState(() {
-                    editUnit = value!;
-                  });
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Item'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: editNameCtrl,
+              decoration: const InputDecoration(labelText: 'Item name'),
             ),
-            ElevatedButton(
-              onPressed: () {
-                if (editNameCtrl.text.isNotEmpty &&
-                    editPriceCtrl.text.isNotEmpty) {
-                  editItem(
-                    item['id'],
-                    editNameCtrl.text,
-                    double.parse(editPriceCtrl.text),
-                    editUnit,
-                  );
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Save'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: editPriceCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Price'),
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (editNameCtrl.text.isNotEmpty &&
+                  editPriceCtrl.text.isNotEmpty) {
+                editItem(
+                  item['id'],
+                  editNameCtrl.text,
+                  double.parse(editPriceCtrl.text),
+                );
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
       ),
     );
   }
@@ -171,21 +150,6 @@ class _ItemsScreenState extends State<ItemsScreen> {
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
-            DropdownButton<String>(
-              value: selectedUnit,
-              isExpanded: true,
-              hint: const Text('Select Unit'),
-              items: ['dz', 'pcs', 'grs', 'ltr', 'kg']
-                  .map((unit) =>
-                      DropdownMenuItem(value: unit, child: Text(unit)))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedUnit = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -219,7 +183,7 @@ class _ItemsScreenState extends State<ItemsScreen> {
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
-                            'Rs. ${item['price'].toStringAsFixed(2)} / ${item['unit'] ?? 'dz'}',
+                            'Rs. ${item['price'].toStringAsFixed(2)}',
                             style: const TextStyle(
                               color: appPrimaryColor,
                               fontWeight: FontWeight.bold,

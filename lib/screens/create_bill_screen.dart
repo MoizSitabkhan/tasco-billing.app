@@ -21,6 +21,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
   int? selectedItemId;
   double quantity = 1.0;
   double customPrice = 0;
+  String customUnit = '';
   double total = 0;
   double packingCost = 0;
   double previousBalance = 0;
@@ -29,6 +30,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
   TextEditingController searchController = TextEditingController();
   TextEditingController quantityController = TextEditingController();
   TextEditingController priceController = TextEditingController();
+  TextEditingController unitController = TextEditingController();
 
   @override
   void initState() {
@@ -59,6 +61,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
     searchController.dispose();
     quantityController.dispose();
     priceController.dispose();
+    unitController.dispose();
     super.dispose();
   }
 
@@ -90,6 +93,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
         stockItems.firstWhere((item) => item['id'] == selectedItemId);
     double price = customPrice > 0 ? customPrice : selected['price'];
     double itemTotal = price * quantity;
+    String unit = customUnit.isNotEmpty ? customUnit : '';
 
     // Check if item already exists in bill (match by name, case-insensitive)
     int existingIndex = billItems.indexWhere((item) =>
@@ -116,16 +120,18 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
         'qty': quantity,
         'price': price,
         'total': itemTotal,
-        'unit': selected['unit'] ?? 'dz',
+        'unit': unit,
       });
       total += itemTotal;
     }
 
     quantity = 1.0;
     customPrice = 0;
+    customUnit = '';
     selectedItemId = null;
     quantityController.clear();
     priceController.clear();
+    unitController.clear();
     searchController.clear();
 
     setState(() {});
@@ -372,23 +378,43 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                             ),
                           ),
                         const SizedBox(height: 12),
-                        // Quantity Input (supports decimals)
-                        TextField(
-                          controller: quantityController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          decoration: InputDecoration(
-                            labelText: 'Quantity',
-                            prefixIcon: const Icon(Icons.shopping_cart),
-                          ),
-                          onChanged: (val) {
-                            final parsed = double.tryParse(val) ?? 1.0;
-                            // Limit to 1 decimal place
-                            quantity = double.parse(parsed.toStringAsFixed(1));
-                          },
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d+\.?\d?'),
+                        // Quantity and Unit Input (side by side)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: quantityController,
+                                keyboardType: const TextInputType.numberWithOptions(
+                                    decimal: true),
+                                decoration: InputDecoration(
+                                  labelText: 'Quantity',
+                                  prefixIcon: const Icon(Icons.shopping_cart),
+                                ),
+                                onChanged: (val) {
+                                  final parsed = double.tryParse(val) ?? 1.0;
+                                  // Limit to 1 decimal place
+                                  quantity = double.parse(parsed.toStringAsFixed(1));
+                                },
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r'^\d+\.?\d?'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextField(
+                                controller: unitController,
+                                decoration: InputDecoration(
+                                  labelText: 'Unit',
+                                  prefixIcon: const Icon(Icons.label),
+                                  hintText: 'e.g., dz, pcs, kg',
+                                ),
+                                onChanged: (val) {
+                                  customUnit = val;
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -449,9 +475,9 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                                               qty == qty.roundToDouble()
                                                   ? qty.toStringAsFixed(0)
                                                   : qty.toStringAsFixed(1);
-                                          final unit = item['unit'] ?? 'dz';
+                                          final unit = item['unit'] ?? '';
                                           return Text(
-                                            'Qty: $qtyStr $unit × ₹${(item['price'] as num).toDouble().toStringAsFixed(2)}',
+                                            'Qty: $qtyStr${ unit.isNotEmpty ? ' $unit' : ''} × ₹${(item['price'] as num).toDouble().toStringAsFixed(2)}',
                                             style: const TextStyle(
                                                 color: appPrimaryColor),
                                           );
@@ -667,6 +693,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
         TextEditingController(text: (item['qty'] as num).toDouble().toString());
     final priceController = TextEditingController(
         text: (item['price'] as num).toDouble().toStringAsFixed(2));
+    final unitController = TextEditingController(text: item['unit'] ?? '');
 
     showDialog(
       context: context,
@@ -685,6 +712,11 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                   RegExp(r'^\d+\.?\d?'),
                 ),
               ],
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: unitController,
+              decoration: const InputDecoration(labelText: 'Unit'),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -720,6 +752,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                   (item['price'] as num).toDouble();
               setState(() {
                 billItems[index]['qty'] = newQty;
+                billItems[index]['unit'] = unitController.text;
                 billItems[index]['price'] = newPrice;
                 billItems[index]['total'] = newQty * newPrice;
                 total = billItems.fold(

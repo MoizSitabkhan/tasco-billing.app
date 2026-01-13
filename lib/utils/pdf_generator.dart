@@ -56,10 +56,11 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
         pw.Table(
           border: pw.TableBorder.all(width: 1),
           columnWidths: {
-            0: const pw.FlexColumnWidth(3),
-            1: const pw.FlexColumnWidth(1.5),
-            2: const pw.FlexColumnWidth(1.8),
-            3: const pw.FlexColumnWidth(1.8),
+            0: const pw.FlexColumnWidth(2.5),
+            1: const pw.FlexColumnWidth(1.2),
+            2: const pw.FlexColumnWidth(1.2),
+            3: const pw.FlexColumnWidth(1.5),
+            4: const pw.FlexColumnWidth(1.6),
           },
           children: [
             // Header Row
@@ -96,6 +97,18 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                   padding: const pw.EdgeInsets.all(8),
                   child: pw.Center(
                     child: pw.Text(
+                      'Unit',
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(8),
+                  child: pw.Center(
+                    child: pw.Text(
                       'Price',
                       style: pw.TextStyle(
                         fontWeight: pw.FontWeight.bold,
@@ -120,7 +133,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
             ),
             // Data Rows
             ...billItems.map((item) {
-              final unit = item['unit'] ?? 'dz';
+              final unit = item['unit'] ?? '';
               final qtyStr = (item['qty'] as num).toDouble().toString();
               return pw.TableRow(
                 children: [
@@ -135,7 +148,16 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                     padding: const pw.EdgeInsets.all(8),
                     child: pw.Center(
                       child: pw.Text(
-                        '$qtyStr $unit',
+                        qtyStr,
+                        style: const pw.TextStyle(fontSize: 11),
+                      ),
+                    ),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Center(
+                      child: pw.Text(
+                        unit,
                         style: const pw.TextStyle(fontSize: 11),
                       ),
                     ),
