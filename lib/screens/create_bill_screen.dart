@@ -116,6 +116,7 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
         'qty': quantity,
         'price': price,
         'total': itemTotal,
+        'unit': selected['unit'] ?? 'dz',
       });
       total += itemTotal;
     }
@@ -448,8 +449,9 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
                                               qty == qty.roundToDouble()
                                                   ? qty.toStringAsFixed(0)
                                                   : qty.toStringAsFixed(1);
+                                          final unit = item['unit'] ?? 'dz';
                                           return Text(
-                                            'Qty: $qtyStr × ₹${(item['price'] as num).toDouble().toStringAsFixed(2)}',
+                                            'Qty: $qtyStr $unit × ₹${(item['price'] as num).toDouble().toStringAsFixed(2)}',
                                             style: const TextStyle(
                                                 color: appPrimaryColor),
                                           );

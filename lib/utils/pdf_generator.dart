@@ -120,6 +120,8 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
             ),
             // Data Rows
             ...billItems.map((item) {
+              final unit = item['unit'] ?? 'dz';
+              final qtyStr = (item['qty'] as num).toDouble().toString();
               return pw.TableRow(
                 children: [
                   pw.Padding(
@@ -133,7 +135,7 @@ Future<File> generatePdf(List<Map<String, dynamic>> billItems, double total,
                     padding: const pw.EdgeInsets.all(8),
                     child: pw.Center(
                       child: pw.Text(
-                        (item['qty'] as num).toDouble().toString(),
+                        '$qtyStr $unit',
                         style: const pw.TextStyle(fontSize: 11),
                       ),
                     ),
